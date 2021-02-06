@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Http;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,21 +19,20 @@ class Stock extends Model
     public function track()
     {
         // Hia a APi endpoint for associate retailer
-        if ($this->retailer->name == 'Best Buy') {
+        $status = $this->retailer
+            ->client()
+            ->checkAvailability($this);
 
-            //fetch the up-to-date details from the item
-            $results = Http::get('https://foo.test')->json();
-
-            // and then refresh the current stock record
-            $this->update([
-                'in_stock' => $results['available'],
-                'price'    => $results['price'],
-            ]);
-        }
+        // and then refresh the current stock record
+        $this->update([
+            'in_stock' => $status->available,
+            'price' => $status->price,
+        ]);
     }
 
     public function retailer()
     {
         return $this->belongsTo(Retailer::class);
     }
+
 }
